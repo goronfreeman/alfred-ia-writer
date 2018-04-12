@@ -9,7 +9,7 @@ class Search
   end
 
   def call
-    return matches.each { |document_name| document_json(document_name) } if matches.any?
+    return matches.each { |match| document_json(match) } if matches.any?
     no_match_json
   ensure
     print workflow.output
@@ -18,16 +18,20 @@ class Search
   private
 
   def find_matches
-    dir_path = "#{ENV['HOME']}/Library/Containers/pro.writer.mac/Data/Documents/"
-    Dir["#{dir_path}*.txt"]
+    local  = "#{ENV['HOME']}/Library/Containers/pro.writer.mac/Data/Documents/*.txt"
+    icloud = "#{ENV['HOME']}/Library/Mobile Documents/*~pro~writer/Documents/*.txt"
+
+    Dir.glob(local) + Dir.glob(icloud)
   end
 
   def document_json(file_path)
-    base_name = File.basename(file_path)
+    base_name = File.basename(file_path, '.txt')
 
     workflow.result
             .uid(base_name)
             .title(base_name)
+            .subtitle(file_path)
+            .quicklookurl(file_path)
             .arg(file_path)
             .text('copy', file_path)
             .autocomplete(base_name)
